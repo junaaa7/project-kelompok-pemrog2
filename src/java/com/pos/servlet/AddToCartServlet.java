@@ -1,29 +1,17 @@
 /*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ * AddToCartServlet.java - Servlet untuk menambahkan produk ke keranjang
  */
 package com.pos.servlet;
 
 import com.pos.service.CartService;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
-import java.io.*;
-/**
- *
- * @author ARJUNA.R.PUTRA
- */
-public class AddToCartServlet extends HttpServlet {
+import jakarta.servlet.*;
+import jakarta.servlet.http.*;
+import jakarta.servlet.annotation.*;
+import java.io.IOException;
 
-    /**
-     *
-     * @param request
-     * @param response
-     * @throws ServletException
-     * @throws IOException
-     */
+@WebServlet("/AddToCartServlet")
+public class AddToCartServlet extends HttpServlet {
+    
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
@@ -31,15 +19,31 @@ public class AddToCartServlet extends HttpServlet {
         HttpSession session = request.getSession();
         CartService cartService = (CartService) session.getAttribute("cartService");
         
-        String productCode = request.getParameter("productCode");
-        int quantity = Integer.parseInt(request.getParameter("quantity"));
-        
-        if (cartService.addToCart(productCode, quantity)) {
-            session.setAttribute("message", "Produk berhasil ditambahkan ke keranjang");
-        } else {
-            session.setAttribute("error", "Gagal menambahkan produk ke keranjang");
+        if (cartService == null) {
+            cartService = new CartService();
+            session.setAttribute("cartService", cartService);
         }
         
-        response.sendRedirect("index.jsp");
+        String productCode = request.getParameter("productCode");
+        int quantity = 1;
+        
+        try {
+            quantity = Integer.parseInt(request.getParameter("quantity"));
+        } catch (NumberFormatException e) {
+            quantity = 1;
+        }
+        
+        if (productCode != null && !productCode.trim().isEmpty() && quantity > 0) {
+            cartService.addToCart(productCode, quantity);
+            System.out.println("AddToCartServlet: Added " + quantity + " of product " + productCode + " to cart");
+        }
+        
+        // Redirect back to previous page
+        String referer = request.getHeader("Referer");
+        if (referer != null) {
+            response.sendRedirect(referer);
+        } else {
+            response.sendRedirect("index.jsp");
+        }
     }
 }
