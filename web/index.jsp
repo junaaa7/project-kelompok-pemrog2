@@ -4,9 +4,7 @@
     Author     : ARJUNA.R.PUTRA
 --%>
 
-<%-- 
-    index.jsp - Halaman utama sistem POS
---%>
+
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="com.pos.service.CartService" %>
 <%@ page import="com.pos.model.Product" %>

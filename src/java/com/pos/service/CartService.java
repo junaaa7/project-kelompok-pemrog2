@@ -1,5 +1,6 @@
 /*
- * CartService.java - Service untuk keranjang belanja (VERSION FIXED)
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package com.pos.service;
 
@@ -8,6 +9,12 @@ import com.pos.model.CartItem;
 import com.pos.model.Product;
 import java.util.ArrayList;
 import java.util.List;
+
+/**
+ *
+ * @author ARJUNA.R.PUTRA
+ */
+
 
 public class CartService {
     private List<CartItem> cartItems;

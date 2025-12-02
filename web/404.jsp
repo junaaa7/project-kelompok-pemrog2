@@ -4,7 +4,7 @@
     Author     : ARJUNA.R.PUTRA
 --%>
 
-<%-- File: 404.jsp --%>
+
 <%@ page contentType="text/html; charset=UTF-8" %>
 <!DOCTYPE html>
 <html>

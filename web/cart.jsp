@@ -4,9 +4,6 @@
     Author     : ARJUNA.R.PUTRA
 --%>
 
-<%-- 
-    cart.jsp - Halaman keranjang belanja
---%>
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="com.pos.service.CartService" %>
 <%@ page import="com.pos.model.CartItem" %>

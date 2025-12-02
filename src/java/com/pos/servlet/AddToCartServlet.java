@@ -1,5 +1,6 @@
 /*
- * AddToCartServlet.java - Servlet untuk menambahkan produk ke keranjang
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package com.pos.servlet;
 
@@ -8,6 +9,11 @@ import jakarta.servlet.*;
 import jakarta.servlet.http.*;
 import jakarta.servlet.annotation.*;
 import java.io.IOException;
+
+/**
+ *
+ * @author ARJUNA.R.PUTRA
+ */
 
 @WebServlet("/AddToCartServlet")
 public class AddToCartServlet extends HttpServlet {
