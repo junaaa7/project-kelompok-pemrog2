@@ -1,7 +1,4 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */package com.pos.filter;
+package com.pos.filter;
 
 import com.pos.model.User;
 import jakarta.servlet.Filter;
@@ -16,60 +13,107 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 
-/**
- *
- * @author ARJUNA.R.PUTRA
- */
-
 @WebFilter("/*")
 public class AuthFilter implements Filter {
     
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
-            throws IOException, ServletException {
+    public void doFilter(ServletRequest request, ServletResponse response, 
+                         FilterChain chain) throws IOException, ServletException {
         
-        HttpServletRequest req = (HttpServletRequest) request;
-        HttpServletResponse res = (HttpServletResponse) response;
-        HttpSession session = req.getSession(false);
+        HttpServletRequest httpRequest = (HttpServletRequest) request;
+        HttpServletResponse httpResponse = (HttpServletResponse) response;
+        HttpSession session = httpRequest.getSession(false);
         
-        String contextPath = req.getContextPath();
-        String requestURI = req.getRequestURI();
-        String path = requestURI.substring(contextPath.length());
+        String path = httpRequest.getRequestURI().substring(
+            httpRequest.getContextPath().length()
+        );
         
-        // Debug info
-        System.out.println("AuthFilter: Path = " + path);
+        System.out.println("AuthFilter: Checking access for path: " + path);
         
-        // Resources yang boleh diakses tanpa login
-        boolean isLoginPage = path.equals("/login") || path.equals("/login.jsp");
-        boolean isRegisterPage = path.equals("/register") || path.equals("/register.jsp");
-        boolean isStaticResource = path.startsWith("/css/") || 
-                                  path.endsWith(".css") || 
-                                  path.endsWith(".js") || 
-                                  path.endsWith(".png") || 
-                                  path.endsWith(".jpg");
-        boolean isErrorPage = path.equals("/404.jsp") || path.equals("/500.jsp");
-        
-        User user = null;
-        if (session != null) {
-            user = (User) session.getAttribute("user");
-        }
-        
-        boolean isLoggedIn = (user != null);
-        
-        // Allow access to login, register, static resources, and error pages
-        if (isLoginPage || isRegisterPage || isStaticResource || isErrorPage) {
+        // Skip filter for public resources
+        if (path.startsWith("/login") || 
+            path.startsWith("/register") || 
+            path.startsWith("/css/") || 
+            path.startsWith("/js/") || 
+            path.startsWith("/images/") ||
+            path.startsWith("/resources/") ||
+            path.endsWith(".css") || 
+            path.endsWith(".js") ||
+            path.endsWith(".png") ||
+            path.endsWith(".jpg") ||
+            path.endsWith(".jpeg") ||
+            path.endsWith(".gif") ||
+            path.endsWith(".ico")) {
             chain.doFilter(request, response);
             return;
         }
         
-        // Jika belum login dan mencoba akses halaman terproteksi
+        // Check if user is logged in
+        boolean isLoggedIn = (session != null && session.getAttribute("user") != null);
+        
+        // If not logged in, redirect to login page
         if (!isLoggedIn) {
-            System.out.println("AuthFilter: Redirecting to login from " + path);
-            res.sendRedirect(contextPath + "/login.jsp");
+            System.out.println("AuthFilter: User not logged in, redirecting to login");
+            httpResponse.sendRedirect(httpRequest.getContextPath() + "/login.jsp");
             return;
         }
         
-        // User sudah login, lanjutkan
+        // Get user from session
+        User user = (User) session.getAttribute("user");
+        String role = user.getRole();
+        String username = user.getUsername();
+        
+        System.out.println("AuthFilter: User " + username + " with role " + role + " accessing " + path);
+        
+        // ADMIN PAGES - Block Cashier Access
+        if (role.equals("cashier")) {
+            String[] adminPages = {
+                "/user-management.jsp",
+                "/product-management.jsp", 
+                "/category-management.jsp",
+                "/sales-report.jsp",
+                "/system-settings.jsp",
+                "/product-form.jsp",
+                "/UserManagementServlet",
+                "/ProductManagementServlet",
+                "/CategoryManagementServlet",
+                "/SalesReportServlet"
+            };
+            
+            for (String adminPage : adminPages) {
+                if (path.contains(adminPage)) {
+                    System.out.println("AuthFilter: Cashier " + username + " tried to access admin page: " + adminPage);
+                    httpResponse.sendError(HttpServletResponse.SC_FORBIDDEN, 
+                        "Access Denied: Cashier cannot access admin pages");
+                    return;
+                }
+            }
+        }
+        
+        // CASHIER PAGES - Block Admin Access
+        if (role.equals("admin")) {
+            String[] cashierOnlyPages = {
+                "/index.jsp",
+                "/cart.jsp",
+                "/receipt.jsp",
+                "/cashier-transactions.jsp",
+                "/AddToCartServlet",
+                "/RemoveFromCartServlet",
+                "/UpdateCartServlet",
+                "/ClearCartServlet",
+                "/ProcessPaymentServlet"
+            };
+            
+            for (String cashierPage : cashierOnlyPages) {
+                if (path.equals(httpRequest.getContextPath() + cashierPage) || 
+                    path.contains(cashierPage)) {
+                    System.out.println("AuthFilter: Admin " + username + " tried to access cashier page: " + cashierPage);
+                    httpResponse.sendRedirect(httpRequest.getContextPath() + "/dashboard.jsp");
+                    return;
+                }
+            }
+        }
+        
         chain.doFilter(request, response);
     }
     

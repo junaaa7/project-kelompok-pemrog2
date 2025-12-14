@@ -4,6 +4,8 @@
     Author     : ARJUNA.R.PUTRA
 --%>
 
+<%@page import="com.pos.model.User"%>
+<%@page import="com.pos.model.User"%>
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="com.pos.service.CartService" %>
 <%@ page import="com.pos.model.CartItem" %>
@@ -21,6 +23,18 @@
     // Get error/success messages
     String error = request.getParameter("error");
     String success = request.getParameter("success");
+    
+ // Check if user is logged in and is cashier
+    User user = (User) session.getAttribute("user");
+    if (user == null) {
+        response.sendRedirect("login.jsp");
+        return;
+    }
+    
+    if (!"cashier".equals(user.getRole())) {
+        response.sendRedirect("dashboard.jsp");
+        return;
+    }
 %>
 <!DOCTYPE html>
 <html lang="id">

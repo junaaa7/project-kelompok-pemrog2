@@ -117,7 +117,7 @@ public class CartService {
                 for (CartItem item : cartItems) {
                     String productCode = item.getProduct().getCode();
                     int quantity = item.getQuantity();
-                    productDAO.updateProductStock(productCode, quantity);
+                    Product product = productDAO.getProductByCode(productCode);
                 }
                 clearCart();
                 return true;

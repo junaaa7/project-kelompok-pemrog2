@@ -1,15 +1,6 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.pos.model;
 
-/**
- *
- * @author ARJUNA.R.PUTRA
- */
-
-import java.sql.Timestamp;
+import java.util.Date;
 
 public class Product {
     private int id;
@@ -18,17 +9,18 @@ public class Product {
     private String description;
     private double price;
     private int stock;
-    private int categoryId;
-    private String categoryName; // Nama kategori
+    private Integer categoryId;
+    private String categoryName;
     private String imageUrl;
-    private boolean isActive;
-    private Timestamp createdAt;
-    private Timestamp updatedAt;
+    private boolean active;
+    private Date createdAt;
+    private Date updatedAt;
     
     // Constructors
     public Product() {}
     
-    public Product(String code, String name, double price, int stock) {
+    public Product(int id, String code, String name, double price, int stock) {
+        this.id = id;
         this.code = code;
         this.name = name;
         this.price = price;
@@ -54,38 +46,33 @@ public class Product {
     public int getStock() { return stock; }
     public void setStock(int stock) { this.stock = stock; }
     
-    public int getCategoryId() { return categoryId; }
-    public void setCategoryId(int categoryId) { this.categoryId = categoryId; }
+    public Integer getCategoryId() { return categoryId; }
+    public void setCategoryId(Integer categoryId) { this.categoryId = categoryId; }
     
     public String getCategoryName() { return categoryName; }
     public void setCategoryName(String categoryName) { this.categoryName = categoryName; }
     
-    // Untuk kompatibilitas dengan kode lama
-    public String getCategory() { return categoryName; }
-    public void setCategory(String category) { this.categoryName = category; }
-    
     public String getImageUrl() { return imageUrl; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
     
-    public boolean isActive() { return isActive; }
-    public void setActive(boolean active) { isActive = active; }
+    public boolean isActive() { return active; }
+    public void setActive(boolean active) { this.active = active; }
     
-    public Timestamp getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
+    public Date getCreatedAt() { return createdAt; }
+    public void setCreatedAt(Date createdAt) { this.createdAt = createdAt; }
     
-    public Timestamp getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(Timestamp updatedAt) { this.updatedAt = updatedAt; }
+    public Date getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(Date updatedAt) { this.updatedAt = updatedAt; }
     
     @Override
     public String toString() {
         return "Product{" +
-                "id=" + id +
-                ", code='" + code + '\'' +
-                ", name='" + name + '\'' +
-                ", price=" + price +
-                ", stock=" + stock +
-                ", categoryId=" + categoryId +
-                ", categoryName='" + categoryName + '\'' +
-                '}';
+               "id=" + id +
+               ", code='" + code + '\'' +
+               ", name='" + name + '\'' +
+               ", price=" + price +
+               ", stock=" + stock +
+               ", active=" + active +
+               '}';
     }
 }

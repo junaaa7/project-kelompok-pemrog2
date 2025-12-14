@@ -4,15 +4,20 @@
     Author     : ARJUNA.R.PUTRA
 --%>
 
-
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="java.text.SimpleDateFormat" %>
 <%@ page import="java.util.Date" %>
+<%@ page import="com.pos.model.CartItem" %>
+<%@ page import="java.util.List" %>
 <%
+    // Get data from request attributes
     Double total = (Double) request.getAttribute("total");
     Double cash = (Double) request.getAttribute("cash");
     Double change = (Double) request.getAttribute("change");
+    String transactionCode = (String) request.getAttribute("transactionCode");
+    List<CartItem> cartItems = (List<CartItem>) request.getAttribute("cartItems");
     
+    // If data is null, try to get from session
     if (total == null || cash == null || change == null) {
         response.sendRedirect("cart.jsp");
         return;
@@ -20,6 +25,19 @@
     
     SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
     String dateTime = sdf.format(new Date());
+    
+    // Get user from session
+    Object userObj = session.getAttribute("user");
+    String cashierName = "Kasir";
+    if (userObj != null) {
+        try {
+            com.pos.model.User user = (com.pos.model.User) userObj;
+            cashierName = user.getFullName();
+        } catch (Exception e) {
+            // If cast fails, use toString
+            cashierName = userObj.toString();
+        }
+    }
 %>
 <!DOCTYPE html>
 <html lang="id">
@@ -73,6 +91,7 @@
             width: 100%;
             border-collapse: collapse;
             margin: 15px 0;
+            font-size: 14px;
         }
         
         .receipt-table td {
@@ -115,6 +134,7 @@
             border-radius: 4px;
             border: none;
             cursor: pointer;
+            font-size: 14px;
         }
         
         .btn:hover {
@@ -129,9 +149,18 @@
             background: #218838;
         }
         
+        .btn-transaction {
+            background: #6c757d;
+        }
+        
+        .btn-transaction:hover {
+            background: #545b62;
+        }
+        
         @media print {
             body {
                 background: white;
+                padding: 0;
             }
             
             .btn-group {
@@ -140,12 +169,53 @@
             
             .receipt-container {
                 box-shadow: none;
+                max-width: 100%;
+                padding: 10px;
             }
+            
+            .receipt-header h1 {
+                font-size: 20px;
+            }
+            
+            .receipt-table {
+                font-size: 12px;
+            }
+        }
+        
+        .item-name {
+            width: 60%;
+        }
+        
+        .item-qty, .item-price, .item-subtotal {
+            text-align: right;
+            width: 13.33%;
+        }
+        
+        .text-right {
+            text-align: right;
+        }
+        
+        .text-center {
+            text-align: center;
+        }
+        
+        .success-message {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            text-align: center;
         }
     </style>
 </head>
 <body>
     <div class="receipt-container">
+        <!-- Success Message -->
+        <div class="success-message">
+            ✅ Transaksi Berhasil!
+        </div>
+        
         <div class="receipt-header">
             <h1>TOKO MAKMUR JAYA</h1>
             <p>Jl. Raya No. 123, Jakarta</p>
@@ -153,42 +223,55 @@
         </div>
         
         <div class="receipt-details">
-            <p><strong>No. Transaksi:</strong> TRX-<%= System.currentTimeMillis() %></p>
+            <p><strong>No. Transaksi:</strong> <%= transactionCode %></p>
             <p><strong>Tanggal:</strong> <%= dateTime %></p>
-            <p><strong>Kasir:</strong> <% 
-                Object user = session.getAttribute("user");
-                if (user != null) {
-                    out.print(user.toString());
-                } else {
-                    out.print("Kasir");
-                }
-            %></p>
+            <p><strong>Kasir:</strong> <%= cashierName %></p>
         </div>
         
         <table class="receipt-table">
-            <tr>
-                <td><strong>ITEM</strong></td>
-                <td style="text-align: right;"><strong>HARGA</strong></td>
-            </tr>
-            <tr>
-                <td>Pembayaran</td>
-                <td style="text-align: right;">Rp <%= String.format("%,.2f", total) %></td>
-            </tr>
+            <thead>
+                <tr>
+                    <td class="item-name"><strong>ITEM</strong></td>
+                    <td class="item-qty"><strong>QTY</strong></td>
+                    <td class="item-price"><strong>HARGA</strong></td>
+                    <td class="item-subtotal"><strong>SUB</strong></td>
+                </tr>
+            </thead>
+            <tbody>
+                <% 
+                if (cartItems != null && !cartItems.isEmpty()) {
+                    for (CartItem item : cartItems) { 
+                %>
+                <tr>
+                    <td class="item-name"><%= item.getProduct().getName() %></td>
+                    <td class="item-qty"><%= item.getQuantity() %></td>
+                    <td class="item-price">Rp <%= String.format("%,.0f", item.getProduct().getPrice()) %></td>
+                    <td class="item-subtotal">Rp <%= String.format("%,.0f", item.getSubtotal()) %></td>
+                </tr>
+                <% 
+                    }
+                } else {
+                %>
+                <tr>
+                    <td colspan="4" class="text-center">Tidak ada item</td>
+                </tr>
+                <% } %>
+            </tbody>
         </table>
         
         <div class="receipt-total">
             <table style="width: 100%;">
                 <tr>
                     <td>Total:</td>
-                    <td style="text-align: right;">Rp <%= String.format("%,.2f", total) %></td>
+                    <td class="text-right">Rp <%= String.format("%,.2f", total) %></td>
                 </tr>
                 <tr>
                     <td>Cash:</td>
-                    <td style="text-align: right;">Rp <%= String.format("%,.2f", cash) %></td>
+                    <td class="text-right">Rp <%= String.format("%,.2f", cash) %></td>
                 </tr>
                 <tr>
                     <td>Kembali:</td>
-                    <td style="text-align: right; color: #28a745; font-size: 1.2em;">
+                    <td class="text-right" style="color: #28a745; font-size: 1.2em;">
                         Rp <%= String.format("%,.2f", change) %>
                     </td>
                 </tr>
@@ -204,21 +287,31 @@
         <div class="btn-group">
             <button onclick="window.print()" class="btn btn-print">🖨️ Cetak Struk</button>
             <a href="index.jsp" class="btn">🔄 Transaksi Baru</a>
+            <a href="cashier-transactions.jsp" class="btn btn-transaction">📋 Riwayat Transaksi</a>
         </div>
     </div>
     
     <script>
         // Auto print after 1 second
         setTimeout(() => {
-            if (window.confirm('Cetak struk sekarang?')) {
+            if (confirm('Cetak struk sekarang?')) {
                 window.print();
             }
         }, 1000);
         
         // Clear cart after printing
         window.onafterprint = function() {
-            fetch('ClearCartServlet');
+            // Cart already cleared by ProcessPaymentServlet
+            console.log('Struk telah dicetak');
         };
+        
+        // Auto redirect to transactions after 10 seconds (optional)
+        setTimeout(() => {
+            if (!document.hidden) {
+                console.log('Redirecting to transactions page...');
+                // window.location.href = 'cashier-transactions.jsp';
+            }
+        }, 10000);
     </script>
 </body>
 </html>

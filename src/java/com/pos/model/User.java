@@ -1,15 +1,7 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.pos.model;
 
+import java.sql.Timestamp;
 import java.util.Date;
-
-/**
- *
- * @author ARJUNA.R.PUTRA
- */
 
 public class User {
     private int id;
@@ -19,19 +11,11 @@ public class User {
     private String email;
     private String role;
     private boolean isActive;
-    private Date createdAt;
-    private Date updatedAt;
+    private Timestamp createdAt;
+    private Timestamp updatedAt;
     
-    // Constructors
+    // Constructor
     public User() {}
-    
-    public User(String username, String password, String fullName, String email, String role) {
-        this.username = username;
-        this.password = password;
-        this.fullName = fullName;
-        this.email = email;
-        this.role = role;
-    }
     
     // Getters and Setters
     public int getId() { return id; }
@@ -55,9 +39,24 @@ public class User {
     public boolean isActive() { return isActive; }
     public void setActive(boolean active) { isActive = active; }
     
-    public Date getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Date createdAt) { this.createdAt = createdAt; }
+    public Timestamp getCreatedAt() { return createdAt; }
+    public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
     
-    public Date getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(Date updatedAt) { this.updatedAt = updatedAt; }
+    // Untuk display di JSP, format tanggal
+    public String getFormattedCreatedAt() {
+        if (createdAt == null) return "-";
+        return new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm").format(createdAt);
+    }
+    
+    public Timestamp getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(Timestamp updatedAt) { this.updatedAt = updatedAt; }
+    
+    // Helper methods
+    public String getStatusText() {
+        return isActive ? "Aktif" : "Nonaktif";
+    }
+    
+    public String getRoleText() {
+        return "admin".equals(role) ? "Administrator" : "Kasir";
+    }
 }

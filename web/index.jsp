@@ -4,12 +4,31 @@
     Author     : ARJUNA.R.PUTRA
 --%>
 
-
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="com.pos.service.CartService" %>
 <%@ page import="com.pos.model.Product" %>
+<%@ page import="com.pos.model.User" %>
 <%@ page import="java.util.List" %>
 <%
+    // Check authentication
+    Object userObj = session.getAttribute("user");
+    boolean isLoggedIn = (userObj != null);
+    
+    // Redirect to login if not logged in
+    if (!isLoggedIn) {
+        response.sendRedirect("login.jsp");
+        return;
+    }
+    
+    // Only cashier can access transaction pages
+    if (userObj instanceof User) {
+        User user = (User) userObj;
+        if ("admin".equals(user.getRole())) {
+            response.sendRedirect("dashboard.jsp");
+            return;
+        }
+    }
+    
     // Inisialisasi atau mendapatkan CartService dari session
     CartService cartService = (CartService) session.getAttribute("cartService");
     if (cartService == null) {
@@ -28,23 +47,13 @@
             System.out.println("index.jsp DEBUG: " + p.getCode() + " - " + p.getName() + " - Rp" + p.getPrice());
         }
     }
-    
-    // Cek apakah user sudah login
-    Object userObj = session.getAttribute("user");
-    boolean isLoggedIn = (userObj != null);
-    
-    // Redirect ke login jika belum login
-    if (!isLoggedIn) {
-        response.sendRedirect("login.jsp");
-        return;
-    }
 %>
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Kasir POS - Home</title>
+    <title>Sistem Kasir POS - Transaksi</title>
     <link rel="stylesheet" type="text/css" href="css/style.css">
     <style>
         * {
@@ -82,9 +91,10 @@
         }
         
         .user-info {
-            text-align: right;
+            text-align: center;
             padding: 0 20px;
             font-size: 0.9em;
+            margin-top: 10px;
         }
         
         .menu-bar {
@@ -225,20 +235,6 @@
             font-size: 12px;
         }
         
-        .logout-btn {
-            background: #6c757d;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 3px;
-            text-decoration: none;
-            font-size: 14px;
-        }
-        
-        .logout-btn:hover {
-            background: #545b62;
-        }
-        
         @media (max-width: 768px) {
             .menu-bar {
                 flex-direction: column;
@@ -258,16 +254,53 @@
                 width: 50px;
             }
         }
+        
+        .cashier-badge {
+            background: #28a745;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            display: inline-block;
+            margin-top: 5px;
+        }
+        
+        .nav-back {
+            position: absolute;
+            left: 20px;
+            top: 20px;
+        }
+        
+        .nav-back a {
+            color: white;
+            text-decoration: none;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 15px;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+        
+        .nav-back a:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>🏪 Sistem Kasir POS</h1>
+            <!-- Tombol kembali ke dashboard -->
+            <div class="nav-back">
+                <a href="dashboard.jsp">← Dashboard</a>
+            </div>
+            
+            <h1>🏪 Sistem Kasir POS - Transaksi</h1>
             <div class="user-info">
-                <% if (userObj != null) { %>
-                    <p>Selamat datang, <%= userObj %> | 
-                    <a href="logout.jsp" class="logout-btn">Logout</a></p>
+                <% if (userObj != null) { 
+                    User user = (User) userObj;
+                %>
+                    <p>Selamat datang, <strong><%= user.getFullName() %></strong></p>
+                    <span class="cashier-badge">KASIR</span>
                 <% } %>
             </div>
         </header>
@@ -288,10 +321,7 @@
                 <strong>Keranjang:</strong> <%= cartService.getCartSize() %> item
                 <strong>Total:</strong> Rp <%= String.format("%,.2f", cartService.calculateTotal()) %>
             </div>
-            <div>
-                <a href="cart.jsp" class="btn btn-secondary">Lihat Keranjang</a>
-                <a href="checkout.jsp" class="btn btn-danger">Checkout</a>
-            </div>
+     
         </div>
         
         <div class="products-container">
@@ -404,7 +434,7 @@
         
         <footer style="margin-top: 50px; text-align: center; color: #666; font-size: 0.9em;">
             <p>Sistem Kasir POS &copy; 2024 - Dibangun dengan Java Servlet & JSP</p>
-            <p>Database: pos_web | Server: GlassFish</p>
+            <p>User: <%= userObj != null ? ((User)userObj).getFullName() : "Guest" %> | Role: <%= userObj != null ? ((User)userObj).getRole() : "-" %></p>
         </footer>
     </div>
     
@@ -451,6 +481,11 @@
                     window.location.href = 'ClearCartServlet';
                 }
             }
+            // Ctrl+D - Dashboard
+            if (e.ctrlKey && e.key === 'd') {
+                e.preventDefault();
+                window.location.href = 'dashboard.jsp';
+            }
         });
         
         // Notification untuk stok rendah
@@ -461,6 +496,14 @@
                 <% } %>
             <% } %>
         <% } %>
+        
+        // Auto focus on first product quantity input
+        document.addEventListener('DOMContentLoaded', function() {
+            const firstQtyInput = document.querySelector('input[name="quantity"]');
+            if (firstQtyInput) {
+                firstQtyInput.focus();
+            }
+        });
     </script>
 </body>
 </html>
