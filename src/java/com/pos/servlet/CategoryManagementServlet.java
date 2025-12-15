@@ -1,6 +1,7 @@
 package com.pos.servlet;
 
-import com.pos.dao.ProductDAO;
+import com.pos.model.User;
+import com.pos.model.Category;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -11,6 +12,8 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
 import com.pos.config.DatabaseConfig;
 
 @WebServlet("/CategoryManagementServlet")
@@ -20,45 +23,61 @@ public class CategoryManagementServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
         
-        HttpSession session = request.getSession();
-        Object user = session.getAttribute("user");
+        System.out.println("=== CategoryManagementServlet.doPost() ===");
         
-        // Check if user is admin
-        if (user == null || !user.toString().contains("admin")) {
+        HttpSession session = request.getSession(false);
+        if (session == null) {
+            response.sendRedirect("login.jsp");
+            return;
+        }
+        
+        User user = (User) session.getAttribute("user");
+        if (user == null || !"admin".equals(user.getRole())) {
             response.sendRedirect("login.jsp");
             return;
         }
         
         String action = request.getParameter("action");
+        System.out.println("Action: " + action);
         
         try {
-            switch (action) {
-                case "add":
-                    addCategory(request, response);
-                    break;
-                case "update":
-                    updateCategory(request, response);
-                    break;
-                case "delete":
-                    deleteCategory(request, response);
-                    break;
-                default:
-                    response.sendRedirect("category-management.jsp");
+            if ("add".equals(action)) {
+                addCategory(request, session);
+            } else if ("update".equals(action)) {
+                updateCategory(request, session);
+            } else if ("delete".equals(action)) {
+                deleteCategory(request, session);
             }
+            
+            // SELALU reload data setelah CRUD
+            reloadCategories(session);
+            
+            // Set timestamp untuk auto-refresh
+            session.setAttribute("lastUpdateTime", System.currentTimeMillis());
+            
         } catch (Exception e) {
-            request.setAttribute("error", "Terjadi kesalahan: " + e.getMessage());
-            request.getRequestDispatcher("category-management.jsp").forward(request, response);
+            e.printStackTrace();
+            session.setAttribute("error", "Error: " + e.getMessage());
         }
+        
+        // Redirect dengan timestamp untuk force refresh browser
+        response.sendRedirect("category-management.jsp?t=" + System.currentTimeMillis());
     }
     
-    private void addCategory(HttpServletRequest request, HttpServletResponse response) 
-            throws ServletException, IOException {
-        
+    private void addCategory(HttpServletRequest request, HttpSession session) throws Exception {
         String code = request.getParameter("code");
         String name = request.getParameter("name");
         String description = request.getParameter("description");
         
-        // Generate code if not provided
+        System.out.println("Adding category: " + name + ", code: " + code);
+        
+        // Validasi
+        if (name == null || name.trim().isEmpty()) {
+            session.setAttribute("error", "Nama kategori wajib diisi");
+            return;
+        }
+        
+        // Generate kode otomatis jika kosong
         if (code == null || code.trim().isEmpty()) {
             code = generateCategoryCode();
         }
@@ -69,105 +88,161 @@ public class CategoryManagementServlet extends HttpServlet {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             
             stmt.setString(1, code);
-            stmt.setString(2, name);
-            stmt.setString(3, description);
+            stmt.setString(2, name.trim());
+            stmt.setString(3, description != null ? description.trim() : null);
             
             int rows = stmt.executeUpdate();
             if (rows > 0) {
-                request.setAttribute("message", "Kategori berhasil ditambahkan!");
+                session.setAttribute("message", "Kategori '" + name + "' berhasil ditambahkan!");
+                System.out.println("Category added successfully: " + name);
             } else {
-                request.setAttribute("error", "Gagal menambahkan kategori!");
+                session.setAttribute("error", "Gagal menambahkan kategori");
             }
-            
         } catch (Exception e) {
-            request.setAttribute("error", "Database error: " + e.getMessage());
+            session.setAttribute("error", "Database error: " + e.getMessage());
+            throw e;
         }
-        
-        request.getRequestDispatcher("category-management.jsp").forward(request, response);
     }
     
-    private void updateCategory(HttpServletRequest request, HttpServletResponse response) 
-            throws ServletException, IOException {
-        
-        int id = Integer.parseInt(request.getParameter("id"));
+    private void updateCategory(HttpServletRequest request, HttpSession session) throws Exception {
+        String idParam = request.getParameter("id");
         String name = request.getParameter("name");
         String description = request.getParameter("description");
         
+        System.out.println("Updating category ID: " + idParam + ", name: " + name);
+        
+        // Validasi
+        if (idParam == null || idParam.trim().isEmpty()) {
+            session.setAttribute("error", "ID kategori tidak valid");
+            return;
+        }
+        if (name == null || name.trim().isEmpty()) {
+            session.setAttribute("error", "Nama kategori wajib diisi");
+            return;
+        }
+        
+        int id = Integer.parseInt(idParam);
         String sql = "UPDATE categories SET name = ?, description = ? WHERE id = ?";
         
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             
-            stmt.setString(1, name);
-            stmt.setString(2, description);
+            stmt.setString(1, name.trim());
+            stmt.setString(2, description != null ? description.trim() : null);
             stmt.setInt(3, id);
             
             int rows = stmt.executeUpdate();
             if (rows > 0) {
-                request.setAttribute("message", "Kategori berhasil diperbarui!");
+                session.setAttribute("message", "Kategori berhasil diperbarui!");
+                System.out.println("Category updated successfully: ID=" + id);
             } else {
-                request.setAttribute("error", "Gagal memperbarui kategori!");
+                session.setAttribute("error", "Kategori tidak ditemukan");
             }
-            
         } catch (Exception e) {
-            request.setAttribute("error", "Database error: " + e.getMessage());
+            session.setAttribute("error", "Database error: " + e.getMessage());
+            throw e;
         }
-        
-        request.getRequestDispatcher("category-management.jsp").forward(request, response);
     }
     
-    private void deleteCategory(HttpServletRequest request, HttpServletResponse response) 
-            throws ServletException, IOException {
+    private void deleteCategory(HttpServletRequest request, HttpSession session) throws Exception {
+        String idParam = request.getParameter("id");
+        System.out.println("Deleting category ID: " + idParam);
         
-        int id = Integer.parseInt(request.getParameter("id"));
+        if (idParam == null || idParam.trim().isEmpty()) {
+            session.setAttribute("error", "ID kategori tidak valid");
+            return;
+        }
         
-        // Check if category has products
+        int id = Integer.parseInt(idParam);
+        String categoryName = "";
+        
+        // Ambil nama kategori untuk pesan
+        String nameSql = "SELECT name FROM categories WHERE id = ?";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement nameStmt = conn.prepareStatement(nameSql)) {
+            
+            nameStmt.setInt(1, id);
+            ResultSet rs = nameStmt.executeQuery();
+            if (rs.next()) {
+                categoryName = rs.getString("name");
+            }
+        }
+        
+        // Cek apakah kategori memiliki produk
         String checkSql = "SELECT COUNT(*) as product_count FROM products WHERE category_id = ?";
-        String updateSql = "UPDATE products SET category_id = NULL WHERE category_id = ?";
-        String deleteSql = "DELETE FROM categories WHERE id = ?";
-        
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
             
             checkStmt.setInt(1, id);
             ResultSet rs = checkStmt.executeQuery();
-            
             if (rs.next()) {
                 int productCount = rs.getInt("product_count");
-                
                 if (productCount > 0) {
-                    // Update products to null category first
-                    try (PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
+                    System.out.println("Category has " + productCount + " products, setting to NULL");
+                    // Update produk untuk set category_id menjadi NULL
+                    String updateProductsSql = "UPDATE products SET category_id = NULL WHERE category_id = ?";
+                    try (PreparedStatement updateStmt = conn.prepareStatement(updateProductsSql)) {
                         updateStmt.setInt(1, id);
                         updateStmt.executeUpdate();
                     }
                 }
-                
-                // Now delete category
-                try (PreparedStatement deleteStmt = conn.prepareStatement(deleteSql)) {
-                    deleteStmt.setInt(1, id);
-                    int rows = deleteStmt.executeUpdate();
-                    
-                    if (rows > 0) {
-                        if (productCount > 0) {
-                            request.setAttribute("message", "Kategori berhasil dihapus! " + productCount + " produk sekarang tanpa kategori.");
-                        } else {
-                            request.setAttribute("message", "Kategori berhasil dihapus!");
-                        }
-                    } else {
-                        request.setAttribute("error", "Gagal menghapus kategori!");
-                    }
-                }
             }
-            
-        } catch (Exception e) {
-            request.setAttribute("error", "Database error: " + e.getMessage());
         }
         
-        request.getRequestDispatcher("category-management.jsp").forward(request, response);
+        // DELETE kategori
+        String sql = "DELETE FROM categories WHERE id = ?";
+        
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, id);
+            int rows = stmt.executeUpdate();
+            
+            if (rows > 0) {
+                session.setAttribute("message", "Kategori '" + categoryName + "' berhasil dihapus!");
+                System.out.println("Category deleted successfully: " + categoryName);
+            } else {
+                session.setAttribute("error", "Kategori tidak ditemukan");
+            }
+        } catch (Exception e) {
+            session.setAttribute("error", "Database error: " + e.getMessage());
+            throw e;
+        }
     }
     
-    private String generateCategoryCode() {
+    private void reloadCategories(HttpSession session) throws Exception {
+        List<Category> categories = getCategoriesFromDatabase();
+        session.setAttribute("categories", categories);
+        System.out.println("Categories reloaded: " + categories.size() + " items");
+    }
+    
+    private List<Category> getCategoriesFromDatabase() throws Exception {
+        List<Category> categories = new ArrayList<>();
+        
+        String sql = "SELECT c.*, COUNT(p.id) as product_count " +
+                     "FROM categories c " +
+                     "LEFT JOIN products p ON c.id = p.category_id " +
+                     "GROUP BY c.id ORDER BY c.name";
+        
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            
+            while (rs.next()) {
+                Category category = new Category();
+                category.setId(rs.getInt("id"));
+                category.setCode(rs.getString("code"));
+                category.setName(rs.getString("name"));
+                category.setDescription(rs.getString("description"));
+                category.setProductCount(rs.getInt("product_count"));
+                categories.add(category);
+            }
+        }
+        
+        return categories;
+    }
+    
+    private String generateCategoryCode() throws Exception {
         String sql = "SELECT MAX(code) as max_code FROM categories WHERE code LIKE 'CAT%'";
         String newCode = "CAT001";
         
@@ -177,14 +252,15 @@ public class CategoryManagementServlet extends HttpServlet {
             
             if (rs.next()) {
                 String maxCode = rs.getString("max_code");
-                if (maxCode != null) {
-                    int num = Integer.parseInt(maxCode.substring(3)) + 1;
-                    newCode = String.format("CAT%03d", num);
+                if (maxCode != null && maxCode.matches("CAT\\d+")) {
+                    try {
+                        int num = Integer.parseInt(maxCode.substring(3)) + 1;
+                        newCode = String.format("CAT%03d", num);
+                    } catch (NumberFormatException e) {
+                        newCode = "CAT001";
+                    }
                 }
             }
-            
-        } catch (Exception e) {
-            e.printStackTrace();
         }
         
         return newCode;
