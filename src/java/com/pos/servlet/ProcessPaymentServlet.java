@@ -1,3 +1,7 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
 package com.pos.servlet;
 
 import com.pos.model.User;
@@ -18,6 +22,11 @@ import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+
+/**
+ *
+ * @author ARJUNA.R.PUTRA
+ */
 
 @WebServlet("/ProcessPaymentServlet")
 public class ProcessPaymentServlet extends HttpServlet {
