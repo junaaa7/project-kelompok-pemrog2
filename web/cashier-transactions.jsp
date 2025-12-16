@@ -197,9 +197,6 @@
                     <a href="cart.jsp" class="list-group-item list-group-item-action">
                         <i class="fas fa-shopping-cart"></i> Keranjang
                     </a>
-                    <a href="receipt.jsp" class="list-group-item list-group-item-action">
-                        <i class="fas fa-receipt"></i> Struk
-                    </a>
                     <a href="cashier-transactions.jsp" class="list-group-item list-group-item-action active">
                         <i class="fas fa-history"></i> Riwayat Transaksi
                     </a>

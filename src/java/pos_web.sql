@@ -400,3 +400,60 @@ SELECT 'Total Users    : ' AS '', COUNT(*) FROM users;
 SELECT 'Total Products : ' AS '', COUNT(*) FROM products;
 SELECT 'Total Transaksi: ' AS '', COUNT(*) FROM transactions;
 SELECT '========================================' AS '';
+
+-- system_settings.sql
+CREATE DATABASE IF NOT EXISTS pos_system;
+USE pos_system;
+
+-- Tabel system_settings
+CREATE TABLE system_settings (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    store_name VARCHAR(100) DEFAULT 'Toko Makmur Jaya',
+    store_address TEXT,
+    phone VARCHAR(20),
+    email VARCHAR(100),
+    currency VARCHAR(10) DEFAULT 'IDR',
+    date_format VARCHAR(20) DEFAULT 'DD/MM/YYYY',
+    auto_print BOOLEAN DEFAULT TRUE,
+    show_stock_alert BOOLEAN DEFAULT TRUE,
+    
+    -- Receipt settings
+    receipt_header TEXT,
+    receipt_footer TEXT,
+    receipt_width INT DEFAULT 80,
+    receipt_font_size VARCHAR(20) DEFAULT 'Normal',
+    receipt_copies INT DEFAULT 1,
+    
+    -- Tax settings
+    tax_enabled BOOLEAN DEFAULT TRUE,
+    tax_percentage DECIMAL(5,2) DEFAULT 10.00,
+    tax_name VARCHAR(50) DEFAULT 'PPN',
+    
+    -- Discount settings
+    member_discount DECIMAL(5,2) DEFAULT 5.00,
+    min_discount_transaction DECIMAL(10,2) DEFAULT 100000.00,
+    
+    -- Backup settings
+    backup_frequency VARCHAR(20) DEFAULT 'Setiap Minggu',
+    backup_time TIME DEFAULT '02:00:00',
+    backup_keep_days INT DEFAULT 30,
+    cloud_backup BOOLEAN DEFAULT TRUE,
+    
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Insert data default
+INSERT INTO system_settings (id) VALUES (1);
+
+-- Tabel discount_codes (untuk kode diskon khusus)
+CREATE TABLE discount_codes (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    code VARCHAR(20) UNIQUE NOT NULL,
+    discount_percentage DECIMAL(5,2) NOT NULL,
+    valid_from DATE NOT NULL,
+    valid_to DATE NOT NULL,
+    max_usage INT DEFAULT 100,
+    usage_count INT DEFAULT 0,
+    active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

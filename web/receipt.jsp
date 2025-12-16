@@ -1,14 +1,17 @@
 <%-- 
     Document   : receipt.jsp
-    Created on : 28 Nov 2025, 23.35.34
-    Author     : ARJUNA.R.PUTRA
+    Created on : 16 Des 2025
+    Author     : POS System
+    MODIFIED: Struk ukuran optimal untuk keterbacaan kasir
 --%>
 
-<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<%@ page import="java.text.SimpleDateFormat" %>
-<%@ page import="java.util.Date" %>
+<%@page import="java.util.Date"%>
+<%@ page contentType="text/html; charset=UTF-8" %>
 <%@ page import="com.pos.model.CartItem" %>
+<%@ page import="com.pos.model.Product" %>
 <%@ page import="java.util.List" %>
+<%@ page import="java.text.DecimalFormat" %>
+<%@ page import="java.text.SimpleDateFormat" %>
 <%
     // Get data from request attributes
     Double total = (Double) request.getAttribute("total");
@@ -16,302 +19,667 @@
     Double change = (Double) request.getAttribute("change");
     String transactionCode = (String) request.getAttribute("transactionCode");
     List<CartItem> cartItems = (List<CartItem>) request.getAttribute("cartItems");
+    Date transactionDate = (Date) request.getAttribute("transactionDate");
+    com.pos.model.User user = (com.pos.model.User) request.getAttribute("user");
     
-    // If data is null, try to get from session
-    if (total == null || cash == null || change == null) {
-        response.sendRedirect("cart.jsp");
-        return;
+    // Get SYSTEM SETTINGS from request
+    String storeName = (String) request.getAttribute("storeName");
+    String storeAddress = (String) request.getAttribute("storeAddress");
+    String storePhone = (String) request.getAttribute("storePhone");
+    String storeEmail = (String) request.getAttribute("storeEmail");
+    String receiptHeader = (String) request.getAttribute("receiptHeader");
+    String receiptFooter = (String) request.getAttribute("receiptFooter");
+    String currency = (String) request.getAttribute("currency");
+    String receiptFontSize = (String) request.getAttribute("receiptFontSize");
+    Integer receiptCopies = (Integer) request.getAttribute("receiptCopies");
+    
+    // Default values if null - UKURAN OPTIMAL
+    if (storeName == null || storeName.trim().isEmpty()) storeName = "TOKO MAKMUR JAYA";
+    if (storeAddress == null || storeAddress.trim().isEmpty()) storeAddress = "Jl. Raya No. 123, Jakarta";
+    if (storePhone == null || storePhone.trim().isEmpty()) storePhone = "Telp: 021-1234567";
+    if (storeEmail == null) storeEmail = "info@tokomakmurjaya.com";
+    if (receiptHeader == null || receiptHeader.trim().isEmpty()) {
+        receiptHeader = storeName + "\n" + storeAddress + "\n" + storePhone;
     }
+    if (receiptFooter == null || receiptFooter.trim().isEmpty()) {
+        receiptFooter = "Terima kasih telah berbelanja\n*** Barang yang sudah dibeli tidak dapat ditukar ***";
+    }
+    if (currency == null) currency = "IDR";
+    if (receiptFontSize == null) receiptFontSize = "14px"; // UKURAN OPTIMAL
+    if (receiptCopies == null) receiptCopies = 1;
     
-    SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-    String dateTime = sdf.format(new Date());
-    
-    // Get user from session
-    Object userObj = session.getAttribute("user");
+    // Get cashier name properly
     String cashierName = "Kasir";
-    if (userObj != null) {
-        try {
-            com.pos.model.User user = (com.pos.model.User) userObj;
-            cashierName = user.getFullName();
-        } catch (Exception e) {
-            // If cast fails, use toString
-            cashierName = userObj.toString();
-        }
+    if (user != null && user.getFullName() != null) {
+        cashierName = user.getFullName();
+    } else if (request.getAttribute("cashierName") != null) {
+        cashierName = (String) request.getAttribute("cashierName");
     }
+    
+    // Formatting
+    DecimalFormat df = new DecimalFormat("#,###");
+    SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+    SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
+    SimpleDateFormat dateOnlyFormat = new SimpleDateFormat("dd/MM/yyyy");
+    
+    // Determine optimal font size for receipt
+    int fontSize = 12; // UKURAN OPTIMAL UNTUK STRUK
+    try {
+        if (receiptFontSize != null && !receiptFontSize.isEmpty()) {
+            if (receiptFontSize.contains("px")) {
+                fontSize = Integer.parseInt(receiptFontSize.replace("px", "").trim());
+            } else if (receiptFontSize.equalsIgnoreCase("small")) {
+                fontSize = 11;
+            } else if (receiptFontSize.equalsIgnoreCase("normal")) {
+                fontSize = 12;
+            } else if (receiptFontSize.equalsIgnoreCase("large")) {
+                fontSize = 14;
+            }
+        }
+    } catch (Exception e) {
+        fontSize = 12; // Fallback to optimal size
+    }
+    
+    // Ensure reasonable size
+    if (fontSize < 10) fontSize = 12;
+    if (fontSize > 16) fontSize = 14;
+    
+    // Receipt settings
+    String receiptWidth = "300px"; // LEBAR OPTIMAL UNTUK STRUK
+    String receiptPadding = "15px";
+    int headerSize = fontSize + 2;
+    int totalSize = fontSize + 4;
 %>
 <!DOCTYPE html>
-<html lang="id">
-<head>
+<html>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Struk Pembayaran - POS System</title>
+    <title>Struk - <%= storeName %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Courier New', monospace;
-        }
-        
-        body {
-            background: #f0f0f0;
-            padding: 20px;
-        }
-        
-        .receipt-container {
-            max-width: 400px;
-            margin: 0 auto;
-            background: white;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        
-        .receipt-header {
-            text-align: center;
-            border-bottom: 2px dashed #333;
-            padding-bottom: 10px;
-            margin-bottom: 15px;
-        }
-        
-        .receipt-header h1 {
-            font-size: 24px;
-            margin-bottom: 5px;
-        }
-        
-        .receipt-details {
-            margin-bottom: 20px;
-        }
-        
-        .receipt-details p {
-            margin: 5px 0;
-        }
-        
-        .receipt-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 15px 0;
-            font-size: 14px;
-        }
-        
-        .receipt-table td {
-            padding: 5px 0;
-            border-bottom: 1px dashed #ccc;
-        }
-        
-        .receipt-table tr:last-child td {
-            border-bottom: none;
-        }
-        
-        .receipt-total {
-            border-top: 2px solid #333;
-            margin-top: 15px;
-            padding-top: 10px;
-            font-weight: bold;
-        }
-        
-        .receipt-footer {
-            text-align: center;
-            margin-top: 20px;
-            padding-top: 10px;
-            border-top: 1px dashed #333;
-            font-size: 12px;
-            color: #666;
-        }
-        
-        .btn-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-            justify-content: center;
-        }
-        
-        .btn {
-            padding: 10px 20px;
-            background: #007bff;
-            color: white;
-            text-decoration: none;
-            border-radius: 4px;
-            border: none;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        
-        .btn:hover {
-            background: #0056b3;
-        }
-        
-        .btn-print {
-            background: #28a745;
-        }
-        
-        .btn-print:hover {
-            background: #218838;
-        }
-        
-        .btn-transaction {
-            background: #6c757d;
-        }
-        
-        .btn-transaction:hover {
-            background: #545b62;
-        }
-        
+        /* ==================== PRINT STYLES - UKURAN OPTIMAL ==================== */
         @media print {
-            body {
-                background: white;
-                padding: 0;
+            @page {
+                size: 80mm auto; /* Ukuran struk thermal */
+                margin: 2mm;
             }
             
-            .btn-group {
-                display: none;
+            body {
+                margin: 0 !important;
+                padding: 0 !important;
+                font-family: 'Courier New', monospace !important;
+                font-size: <%= fontSize %>pt !important;
+                line-height: 1.2 !important;
+                width: 100% !important;
             }
             
             .receipt-container {
-                box-shadow: none;
-                max-width: 100%;
-                padding: 10px;
+                width: 100% !important;
+                max-width: 76mm !important;
+                margin: 0 auto !important;
+                padding: 5px !important;
+                box-sizing: border-box !important;
+                border: none !important;
+                background: white !important;
             }
             
-            .receipt-header h1 {
-                font-size: 20px;
+            .no-print {
+                display: none !important;
             }
             
-            .receipt-table {
-                font-size: 12px;
+            .print-only {
+                display: block !important;
             }
+            
+            .btn, button {
+                display: none !important;
+            }
+            
+            table {
+                width: 100% !important;
+                font-size: <%= fontSize %>pt !important;
+            }
+            
+            .total-section {
+                font-size: <%= totalSize %>pt !important;
+                font-weight: bold !important;
+            }
+        }
+        
+        /* ==================== SCREEN STYLES ==================== */
+        .dashboard-card {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .receipt-preview {
+            max-width: 320px;
+            margin: 20px auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            background: white;
+        }
+        
+        .receipt-container {
+            width: <%= receiptWidth %>;
+            margin: 0 auto;
+            font-family: 'Courier New', monospace;
+            font-size: <%= fontSize %>px;
+            line-height: 1.3;
+            padding: <%= receiptPadding %>;
+            background: white;
+            border: 1px solid #000;
+        }
+        
+        .store-header {
+            text-align: center;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #000;
+        }
+        
+        .store-name {
+            font-size: <%= headerSize %>px;
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+        
+        .store-info {
+            font-size: <%= fontSize %>px;
+            margin: 2px 0;
+        }
+        
+        .transaction-header {
+            text-align: center;
+            font-weight: bold;
+            font-size: <%= fontSize + 1 %>px;
+            margin: 8px 0;
+            padding: 5px;
+            border-top: 1px dashed #000;
+            border-bottom: 1px dashed #000;
+        }
+        
+        .transaction-info {
+            margin: 10px 0;
+            font-size: <%= fontSize %>px;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 4px 0;
+        }
+        
+        /* TABLE STYLES */
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+            font-size: <%= fontSize %>px;
+        }
+        
+        .items-table th {
+            padding: 6px 3px;
+            border-bottom: 2px solid #000;
+            text-align: left;
+            font-weight: bold;
+        }
+        
+        .items-table td {
+            padding: 4px 3px;
+            border-bottom: 1px dashed #ccc;
         }
         
         .item-name {
-            width: 60%;
+            width: 50%;
         }
         
-        .item-qty, .item-price, .item-subtotal {
-            text-align: right;
-            width: 13.33%;
-        }
-        
-        .text-right {
-            text-align: right;
-        }
-        
-        .text-center {
+        .item-qty {
+            width: 15%;
             text-align: center;
         }
         
-        .success-message {
-            background-color: #d4edda;
-            color: #155724;
+        .item-price {
+            width: 20%;
+            text-align: right;
+        }
+        
+        .item-subtotal {
+            width: 15%;
+            text-align: right;
+            font-weight: bold;
+        }
+        
+        /* TOTALS SECTION */
+        .totals-section {
+            margin: 15px 0;
             padding: 10px;
-            border-radius: 4px;
-            margin-bottom: 15px;
+            border-top: 2px solid #000;
+            border-bottom: 2px solid #000;
+            font-size: <%= fontSize + 1 %>px;
+        }
+        
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+        }
+        
+        .grand-total {
+            font-size: <%= totalSize %>px;
+            font-weight: bold;
+            color: #000;
+        }
+        
+        /* FOOTER */
+        .receipt-footer {
             text-align: center;
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px dashed #000;
+            font-size: <%= fontSize - 1 %>px;
+        }
+        
+        /* SEPARATOR */
+        .separator {
+            border-top: 1px dashed #000;
+            margin: 8px 0;
+        }
+        
+        .dashed-line {
+            border-top: 1px dashed #000;
+            margin: 5px 0;
         }
     </style>
-</head>
+
 <body>
-    <div class="receipt-container">
-        <!-- Success Message -->
-        <div class="success-message">
-            ✅ Transaksi Berhasil!
-        </div>
-        
-        <div class="receipt-header">
-            <h1>TOKO MAKMUR JAYA</h1>
-            <p>Jl. Raya No. 123, Jakarta</p>
-            <p>Telp: 021-1234567</p>
-        </div>
-        
-        <div class="receipt-details">
-            <p><strong>No. Transaksi:</strong> <%= transactionCode %></p>
-            <p><strong>Tanggal:</strong> <%= dateTime %></p>
-            <p><strong>Kasir:</strong> <%= cashierName %></p>
-        </div>
-        
-        <table class="receipt-table">
-            <thead>
-                <tr>
-                    <td class="item-name"><strong>ITEM</strong></td>
-                    <td class="item-qty"><strong>QTY</strong></td>
-                    <td class="item-price"><strong>HARGA</strong></td>
-                    <td class="item-subtotal"><strong>SUB</strong></td>
-                </tr>
-            </thead>
-            <tbody>
-                <% 
-                if (cartItems != null && !cartItems.isEmpty()) {
-                    for (CartItem item : cartItems) { 
-                %>
-                <tr>
-                    <td class="item-name"><%= item.getProduct().getName() %></td>
-                    <td class="item-qty"><%= item.getQuantity() %></td>
-                    <td class="item-price">Rp <%= String.format("%,.0f", item.getProduct().getPrice()) %></td>
-                    <td class="item-subtotal">Rp <%= String.format("%,.0f", item.getSubtotal()) %></td>
-                </tr>
-                <% 
-                    }
-                } else {
-                %>
-                <tr>
-                    <td colspan="4" class="text-center">Tidak ada item</td>
-                </tr>
-                <% } %>
-            </tbody>
-        </table>
-        
-        <div class="receipt-total">
-            <table style="width: 100%;">
-                <tr>
-                    <td>Total:</td>
-                    <td class="text-right">Rp <%= String.format("%,.2f", total) %></td>
-                </tr>
-                <tr>
-                    <td>Cash:</td>
-                    <td class="text-right">Rp <%= String.format("%,.2f", cash) %></td>
-                </tr>
-                <tr>
-                    <td>Kembali:</td>
-                    <td class="text-right" style="color: #28a745; font-size: 1.2em;">
-                        Rp <%= String.format("%,.2f", change) %>
-                    </td>
-                </tr>
-            </table>
-        </div>
-        
-        <div class="receipt-footer">
-            <p>Terima kasih telah berbelanja</p>
-            <p>*** Barang yang sudah dibeli tidak dapat ditukar ***</p>
-            <p>www.tokomakmurjaya.com</p>
-        </div>
-        
-        <div class="btn-group">
-            <button onclick="window.print()" class="btn btn-print">🖨️ Cetak Struk</button>
-            <a href="index.jsp" class="btn">🔄 Transaksi Baru</a>
-            <a href="cashier-transactions.jsp" class="btn btn-transaction">📋 Riwayat Transaksi</a>
+    <!-- ==================== DASHBOARD (NON-PRINT) ==================== -->
+    <div class="container-fluid mt-3 no-print">
+        <div class="row">
+            <div class="col-md-8 offset-md-2">
+                <div class="card dashboard-card">
+                    <div class="card-header bg-primary text-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-receipt"></i> Struk Transaksi
+                            </h5>
+                            <div>
+                                <button class="btn btn-light btn-sm me-2" onclick="printReceipt()">
+                                    <i class="fas fa-print"></i> Cetak Struk
+                                </button>
+                                <a href="cart.jsp" class="btn btn-success btn-sm">
+                                    <i class="fas fa-shopping-cart"></i> Transaksi Baru
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-body">
+                        <!-- TRANSACTION SUMMARY -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0">Informasi Transaksi</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <table class="table table-sm">
+                                            <tr>
+                                                <td><strong>No. Transaksi:</strong></td>
+                                                <td><%= transactionCode %></td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Tanggal:</strong></td>
+                                                <td><%= dateFormat.format(transactionDate) %></td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Kasir:</strong></td>
+                                                <td><%= cashierName %></td>
+                                            </tr>
+                                            <tr class="table-success">
+                                                <td><strong>Total:</strong></td>
+                                                <td class="fw-bold">Rp <%= df.format(total) %></td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Cash:</strong></td>
+                                                <td>Rp <%= df.format(cash) %></td>
+                                            </tr>
+                                            <tr class="table-warning">
+                                                <td><strong>Kembali:</strong></td>
+                                                <td class="fw-bold">Rp <%= df.format(change) %></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0">Informasi Toko</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="mb-1"><strong><%= storeName %></strong></p>
+                                        <p class="mb-1"><small><%= storeAddress %></small></p>
+                                        <p class="mb-1"><small><%= storePhone %></small></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- ITEMS TABLE -->
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <div class="card">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0">Detail Barang (<%= cartItems != null ? cartItems.size() : 0 %> item)</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-sm">
+                                                <thead>
+                                                    <tr>
+                                                        <th>#</th>
+                                                        <th>Nama Produk</th>
+                                                        <th class="text-center">Qty</th>
+                                                        <th class="text-end">Harga</th>
+                                                        <th class="text-end">Subtotal</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <% 
+                                                    if (cartItems != null && !cartItems.isEmpty()) {
+                                                        int counter = 1;
+                                                        for (CartItem item : cartItems) {
+                                                            Product product = item.getProduct();
+                                                    %>
+                                                    <tr>
+                                                        <td><%= counter++ %></td>
+                                                        <td><%= product.getName() %></td>
+                                                        <td class="text-center"><%= item.getQuantity() %></td>
+                                                        <td class="text-end">Rp <%= df.format(product.getPrice()) %></td>
+                                                        <td class="text-end fw-bold">Rp <%= df.format(item.getSubtotal()) %></td>
+                                                    </tr>
+                                                    <% 
+                                                        }
+                                                    }
+                                                    %>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- PREVIEW STRUK -->
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="card">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0">
+                                            <i class="fas fa-eye"></i> Preview Struk 
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="receipt-preview">
+                                            <div class="receipt-container">
+                                                <!-- HEADER -->
+                                                <div class="store-header">
+                                                    <div class="store-name"><%= storeName %></div>
+                                                    <div class="store-info"><%= storeAddress %></div>
+                                                    <div class="store-info"><%= storePhone %></div>
+                                                </div>
+                                                
+                                                <div class="dashed-line"></div>
+                                                
+                                                <!-- TRANSACTION INFO -->
+                                                <div class="transaction-header">STRUK PEMBAYARAN</div>
+                                                
+                                                <div class="transaction-info">
+                                                    <div class="info-row">
+                                                        <span>No. Transaksi:</span>
+                                                        <span><strong><%= transactionCode %></strong></span>
+                                                    </div>
+                                                    <div class="info-row">
+                                                        <span>Tanggal:</span>
+                                                        <span><%= dateOnlyFormat.format(transactionDate) %> <%= timeFormat.format(transactionDate) %></span>
+                                                    </div>
+                                                    <div class="info-row">
+                                                        <span>Kasir:</span>
+                                                        <span><strong><%= cashierName %></strong></span>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="dashed-line"></div>
+                                                
+                                                <!-- ITEMS TABLE -->
+                                                <table class="items-table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th class="item-name">ITEM</th>
+                                                            <th class="item-qty">QTY</th>
+                                                            <th class="item-price">HARGA</th>
+                                                            <th class="item-subtotal">TOTAL</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <% 
+                                                        if (cartItems != null) {
+                                                            for (CartItem item : cartItems) {
+                                                                Product product = item.getProduct();
+                                                        %>
+                                                        <tr>
+                                                            <td class="item-name"><%= product.getName() %></td>
+                                                            <td class="item-qty"><%= item.getQuantity() %></td>
+                                                            <td class="item-price">Rp <%= df.format(product.getPrice()) %></td>
+                                                            <td class="item-subtotal">Rp <%= df.format(item.getSubtotal()) %></td>
+                                                        </tr>
+                                                        <% 
+                                                            }
+                                                        }
+                                                        %>
+                                                    </tbody>
+                                                </table>
+                                                
+                                                <div class="separator"></div>
+                                                
+                                                <!-- TOTALS -->
+                                                <div class="totals-section">
+                                                    <div class="total-row">
+                                                        <span>Total:</span>
+                                                        <span>Rp <%= df.format(total) %></span>
+                                                    </div>
+                                                    <div class="total-row">
+                                                        <span>Cash:</span>
+                                                        <span>Rp <%= df.format(cash) %></span>
+                                                    </div>
+                                                    <div class="total-row grand-total">
+                                                        <span>Kembali:</span>
+                                                        <span>Rp <%= df.format(change) %></span>
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- FOOTER -->
+                                                <div class="receipt-footer">
+                                                    <div><strong>Terima kasih telah berbelanja</strong></div>
+                                                    <div>*** Barang tidak dapat ditukar ***</div>
+                                                    <div style="margin-top: 5px; font-size: <%= fontSize - 2 %>px;">
+                                                        <%= storeEmail %>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-footer text-center">
+                        <button class="btn btn-primary me-2" onclick="printReceipt()">
+                            <i class="fas fa-print"></i> Cetak Struk
+                        </button>
+                        <a href="cart.jsp" class="btn btn-success me-2">
+                            <i class="fas fa-redo"></i> Transaksi Baru
+                        </a>
+                        <a href="dashboard.jsp" class="btn btn-secondary">
+                            <i class="fas fa-home"></i> Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     
+    <!-- ==================== AREA UNTUK CETAK ==================== -->
+    <div id="print-area" style="display: none;">
+        <% for (int copy = 1; copy <= receiptCopies; copy++) { %>
+        <div class="receipt-container print-only">
+            <!-- HEADER -->
+            <div class="store-header">
+                <div class="store-name"><%= storeName %></div>
+                <div class="store-info"><%= storeAddress %></div>
+                <div class="store-info"><%= storePhone %></div>
+            </div>
+            
+            <div class="dashed-line"></div>
+            
+            <!-- TRANSACTION INFO -->
+            <div class="transaction-header">STRUK PEMBAYARAN</div>
+            
+            <div class="transaction-info">
+                <div class="info-row">
+                    <span>No. Transaksi:</span>
+                    <span><strong><%= transactionCode %></strong></span>
+                </div>
+                <div class="info-row">
+                    <span>Tanggal:</span>
+                    <span><%= dateOnlyFormat.format(transactionDate) %> <%= timeFormat.format(transactionDate) %></span>
+                </div>
+                <div class="info-row">
+                    <span>Kasir:</span>
+                    <span><strong><%= cashierName %></strong></span>
+                </div>
+            </div>
+            
+            <div class="dashed-line"></div>
+            
+            <!-- ITEMS TABLE -->
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th class="item-name">ITEM</th>
+                        <th class="item-qty">QTY</th>
+                        <th class="item-price">HARGA</th>
+                        <th class="item-subtotal">TOTAL</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% 
+                    if (cartItems != null && !cartItems.isEmpty()) {
+                        for (CartItem item : cartItems) {
+                            Product product = item.getProduct();
+                    %>
+                    <tr>
+                        <td class="item-name"><%= product.getName() %></td>
+                        <td class="item-qty"><%= item.getQuantity() %></td>
+                        <td class="item-price">Rp <%= df.format(product.getPrice()) %></td>
+                        <td class="item-subtotal">Rp <%= df.format(item.getSubtotal()) %></td>
+                    </tr>
+                    <% 
+                        }
+                    }
+                    %>
+                </tbody>
+            </table>
+            
+            <div class="separator"></div>
+            
+            <!-- TOTALS -->
+            <div class="totals-section">
+                <div class="total-row">
+                    <span>Total:</span>
+                    <span>Rp <%= df.format(total) %></span>
+                </div>
+                <div class="total-row">
+                    <span>Cash:</span>
+                    <span>Rp <%= df.format(cash) %></span>
+                </div>
+                <div class="total-row grand-total">
+                    <span>Kembali:</span>
+                    <span>Rp <%= df.format(change) %></span>
+                </div>
+            </div>
+            
+            <!-- FOOTER -->
+            <div class="receipt-footer">
+                <div><strong>Terima kasih telah berbelanja</strong></div>
+                <div>*** Barang tidak dapat ditukar ***</div>
+                <% if (receiptCopies > 1) { %>
+                <div style="font-size: <%= fontSize - 2 %>px; margin-top: 5px;">
+                    Salinan: <%= copy %>/<%= receiptCopies %>
+                </div>
+                <% } %>
+            </div>
+            
+            <!-- END MARKER -->
+            <div style="text-align: center; margin-top: 10px; font-size: <%= fontSize - 2 %>px;">
+                ====
+            </div>
+        </div>
+        
+        <!-- PAGE BREAK FOR MULTIPLE COPIES -->
+        <% if (copy < receiptCopies) { %>
+        <div style="page-break-after: always;"></div>
+        <% } %>
+        
+        <% } %>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Auto print after 1 second
-        setTimeout(() => {
-            if (confirm('Cetak struk sekarang?')) {
+        function printReceipt() {
+            // Show print area
+            document.getElementById('print-area').style.display = 'block';
+            
+            // Wait a bit then print
+            setTimeout(function() {
                 window.print();
-            }
+                
+                // Hide print area after printing
+                setTimeout(function() {
+                    document.getElementById('print-area').style.display = 'none';
+                }, 100);
+            }, 50);
+        }
+        
+        // Auto print if needed
+        <% if ("on".equals(request.getParameter("autoPrint"))) { %>
+        setTimeout(function() {
+            printReceipt();
         }, 1000);
+        <% } %>
         
-        // Clear cart after printing
-        window.onafterprint = function() {
-            // Cart already cleared by ProcessPaymentServlet
-            console.log('Struk telah dicetak');
-        };
-        
-        // Auto redirect to transactions after 10 seconds (optional)
-        setTimeout(() => {
-            if (!document.hidden) {
-                console.log('Redirecting to transactions page...');
-                // window.location.href = 'cashier-transactions.jsp';
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'p') {
+                e.preventDefault();
+                printReceipt();
             }
-        }, 10000);
+            if (e.key === 'Escape') {
+                window.location.href = 'cart.jsp';
+            }
+        });
+        
+        // Notification for multiple copies
+        <% if (receiptCopies > 1) { %>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Akan dicetak ' + <%= receiptCopies %> + ' salinan struk');
+        });
+        <% } %>
     </script>
 </body>
 </html>
