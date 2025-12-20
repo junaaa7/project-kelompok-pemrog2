@@ -1,8 +1,7 @@
 <%-- 
-    Document   : receipt.jsp
-    Created on : 16 Des 2025
-    Author     : POS System
-    MODIFIED: Struk ukuran optimal untuk keterbacaan kasir
+    Document   : receipt
+    Created on : 3 Dec 2025, 10.00.00
+    Author     : ARJUNA.R.PUTRA
 --%>
 
 <%@page import="java.util.Date"%>

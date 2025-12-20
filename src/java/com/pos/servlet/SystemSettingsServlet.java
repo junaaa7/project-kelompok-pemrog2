@@ -1,4 +1,8 @@
-package com.pos.controller;
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+package com.pos.servlet;
 
 import com.pos.dao.SystemSettingsDAO;
 import com.pos.model.SystemSettings;
@@ -9,6 +13,11 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+
+/**
+ *
+ * @author ARJUNA.R.PUTRA
+ */
 
 @WebServlet("/SystemSettingsServlet")
 public class SystemSettingsServlet extends HttpServlet {

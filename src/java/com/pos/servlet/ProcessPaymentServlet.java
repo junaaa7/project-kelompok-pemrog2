@@ -1,7 +1,6 @@
 /*
- * ProcessPaymentServlet.java
- * Integrasi dengan System Settings untuk struk
- * Modified: Added larger receipt size for better readability
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package com.pos.servlet;
 
@@ -25,6 +24,11 @@ import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+
+/**
+ *
+ * @author ARJUNA.R.PUTRA
+ */
 
 @WebServlet("/ProcessPaymentServlet")
 public class ProcessPaymentServlet extends HttpServlet {
