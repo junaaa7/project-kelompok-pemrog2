@@ -79,10 +79,9 @@ public class UserDAO {
         
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
-            // SIMPAN PASSWORD PLAIN TEXT (no hashing)
+
             pstmt.setString(1, user.getUsername());
-            pstmt.setString(2, user.getPassword()); // Plain text
+            pstmt.setString(2, user.getPassword());
             pstmt.setString(3, user.getFullName());
             pstmt.setString(4, user.getEmail());
             pstmt.setString(5, user.getRole());

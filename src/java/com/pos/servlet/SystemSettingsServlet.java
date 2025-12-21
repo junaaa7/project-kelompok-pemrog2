@@ -64,14 +64,14 @@ public class SystemSettingsServlet extends HttpServlet {
             settings.setAutoPrint("on".equals(request.getParameter("autoPrint")));
             settings.setShowStockAlert("on".equals(request.getParameter("showStockAlert")));
             
-            // Simpan ke database
+
             boolean success = settingsDAO.updateGeneralSettings(settings);
             
             if (success) {
                 session.setAttribute("message", "Pengaturan umum berhasil disimpan!");
                 session.setAttribute("messageType", "success");
                 
-                // Update session dengan data baru
+
                 session.setAttribute("storeName", settings.getStoreName());
             } else {
                 session.setAttribute("message", "Gagal menyimpan pengaturan umum!");

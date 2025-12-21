@@ -74,11 +74,11 @@ public class ProcessPaymentServlet extends HttpServlet {
             
             double change = cash - total;
             
-            // Get database connection
+
             conn = DatabaseConfig.getConnection();
-            conn.setAutoCommit(false); // Start transaction
+            conn.setAutoCommit(false);
             
-            // 1. Save transaction
+          
             String transactionCode = generateTransactionCode();
             String transSql = "INSERT INTO transactions (transaction_code, transaction_date, user_id, " +
                              "total_amount, cash, change_amount, payment_method, status) " +
@@ -97,7 +97,7 @@ public class ProcessPaymentServlet extends HttpServlet {
                 throw new SQLException("Gagal menyimpan transaksi");
             }
             
-            // Get generated transaction ID
+           
             int transactionId = -1;
             generatedKeys = transStmt.getGeneratedKeys();
             if (generatedKeys.next()) {
@@ -105,7 +105,7 @@ public class ProcessPaymentServlet extends HttpServlet {
                 System.out.println("Transaction saved with ID: " + transactionId);
             }
             
-            // 2. Save transaction details
+            
             String detailSql = "INSERT INTO transaction_details (transaction_id, product_id, " +
                               "quantity, price, subtotal) VALUES (?, ?, ?, ?, ?)";
             detailStmt = conn.prepareStatement(detailSql);
@@ -119,18 +119,18 @@ public class ProcessPaymentServlet extends HttpServlet {
                 detailStmt.setDouble(5, item.getSubtotal());
                 detailStmt.addBatch();
                 
-                // 3. Update product stock
+             
                 updateProductStock(conn, product.getId(), item.getQuantity());
             }
             
             int[] batchResults = detailStmt.executeBatch();
             System.out.println("Saved " + batchResults.length + " transaction details");
             
-            // Commit transaction
+     
             conn.commit();
             System.out.println("Transaction committed successfully");
             
-            // 4. GET SYSTEM SETTINGS FOR RECEIPT
+         
             SystemSettingsDAO settingsDAO = new SystemSettingsDAO();
             SystemSettings settings = settingsDAO.getSettings();
             
@@ -138,7 +138,7 @@ public class ProcessPaymentServlet extends HttpServlet {
                 settings = new SystemSettings(); // Use default if not found
             }
             
-            // 5. Prepare receipt data
+    
             request.setAttribute("total", total);
             request.setAttribute("cash", cash);
             request.setAttribute("change", change);
@@ -147,7 +147,7 @@ public class ProcessPaymentServlet extends HttpServlet {
             request.setAttribute("user", user);
             request.setAttribute("transactionDate", new Date());
             
-            // 6. SET SYSTEM SETTINGS ATTRIBUTES
+         
             request.setAttribute("storeName", settings.getStoreName());
             request.setAttribute("storeAddress", settings.getStoreAddress());
             request.setAttribute("storePhone", settings.getPhone());
@@ -156,23 +156,23 @@ public class ProcessPaymentServlet extends HttpServlet {
             request.setAttribute("receiptFooter", settings.getReceiptFooter());
             request.setAttribute("currency", settings.getCurrency());
             
-            // 7. OVERRIDE FONT SIZE FOR BETTER READABILITY
+     
             String receiptFontSize = getOptimizedFontSize(settings.getReceiptFontSize());
             request.setAttribute("receiptFontSize", receiptFontSize);
             
-            // 8. Set additional display properties for larger receipt
+       
             request.setAttribute("receiptCopies", settings.getReceiptCopies());
-            request.setAttribute("receiptWidth", "380px"); // Lebar lebih besar
-            request.setAttribute("receiptMargin", "10px"); // Margin lebih kecil untuk ruang lebih besar
-            request.setAttribute("printZoom", "1.0"); // Zoom normal untuk print
+            request.setAttribute("receiptWidth", "380px");
+            request.setAttribute("receiptMargin", "10px");
+            request.setAttribute("printZoom", "1.0");
             
-            // 9. Clear cart from session
+            
             session.removeAttribute("cartService");
             
-            // Log success with settings info
+           
             logTransactionSuccess(settings, transactionCode, user, total, cash, change, cartItems.size(), receiptFontSize);
             
-            // Forward to receipt page
+            
             RequestDispatcher dispatcher = request.getRequestDispatcher("receipt.jsp");
             dispatcher.forward(request, response);
             
@@ -191,33 +191,29 @@ public class ProcessPaymentServlet extends HttpServlet {
             closeResources(conn, transStmt, detailStmt, generatedKeys);
         }
     }
-    
-    /**
-     * Optimize font size for better readability
-     * Minimum size is 14px, optimal for cashier is 16-18px
-     */
+
     private String getOptimizedFontSize(String originalFontSize) {
         if (originalFontSize == null || originalFontSize.trim().isEmpty()) {
             return "16px"; // Default optimal size
         }
         
         try {
-            // Remove 'px' if present
+           
             String sizeStr = originalFontSize.replace("px", "").trim();
             int size = Integer.parseInt(sizeStr);
             
-            // Enforce minimum and optimal size
+           
             if (size < 14) {
-                return "16px"; // Minimum readable size
+                return "16px";
             } else if (size < 16) {
-                return "18px"; // Optimal for cashier
+                return "18px"; 
             } else if (size > 24) {
-                return "20px"; // Maximum reasonable size
+                return "20px";
             } else {
-                return originalFontSize; // Keep original if reasonable
+                return originalFontSize;
             }
         } catch (NumberFormatException e) {
-            // If parsing fails, return optimal size
+
             return "16px";
         }
     }

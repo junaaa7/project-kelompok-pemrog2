@@ -14,8 +14,7 @@
         response.sendRedirect("login.jsp");
         return;
     }
-    
-    // Get statistics based on role
+
     SalesReportDAO salesDAO = new SalesReportDAO();
     NumberFormat currencyFormat = NumberFormat.getCurrencyInstance();
     currencyFormat.setMaximumFractionDigits(0);
@@ -25,15 +24,13 @@
     double todayRevenue = 0;
     int totalUsers = 0;
     
-    // Sample data - in real app, fetch from database
     if ("admin".equals(user.getRole())) {
         totalProducts = 25;
         todayTransactions = 8;
         todayRevenue = 750000;
         totalUsers = 5;
     } else if ("cashier".equals(user.getRole())) {
-        totalProducts = 25; // Kasir bisa lihat total produk tapi tidak edit
-        // Get cashier's own transactions for today
+        totalProducts = 25;
         java.util.Map<String, Object> cashierSummary = salesDAO.getCashierDailySummary(
             user.getId(), 
             new java.sql.Date(System.currentTimeMillis()).toString()
@@ -42,7 +39,7 @@
             ((Number) cashierSummary.get("total_transactions")).intValue() : 0;
         todayRevenue = cashierSummary.get("total_sales") != null ? 
             ((Number) cashierSummary.get("total_sales")).doubleValue() : 0;
-        totalUsers = 1; // Hanya diri sendiri
+        totalUsers = 1;
     }
 %>
 <!DOCTYPE html>

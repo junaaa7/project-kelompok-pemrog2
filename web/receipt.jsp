@@ -44,7 +44,7 @@
         receiptFooter = "Terima kasih telah berbelanja\n*** Barang yang sudah dibeli tidak dapat ditukar ***";
     }
     if (currency == null) currency = "IDR";
-    if (receiptFontSize == null) receiptFontSize = "14px"; // UKURAN OPTIMAL
+    if (receiptFontSize == null) receiptFontSize = "14px";
     if (receiptCopies == null) receiptCopies = 1;
     
     // Get cashier name properly
@@ -62,7 +62,7 @@
     SimpleDateFormat dateOnlyFormat = new SimpleDateFormat("dd/MM/yyyy");
     
     // Determine optimal font size for receipt
-    int fontSize = 12; // UKURAN OPTIMAL UNTUK STRUK
+    int fontSize = 12;
     try {
         if (receiptFontSize != null && !receiptFontSize.isEmpty()) {
             if (receiptFontSize.contains("px")) {
@@ -76,7 +76,7 @@
             }
         }
     } catch (Exception e) {
-        fontSize = 12; // Fallback to optimal size
+        fontSize = 12;
     }
     
     // Ensure reasonable size
@@ -84,7 +84,7 @@
     if (fontSize > 16) fontSize = 14;
     
     // Receipt settings
-    String receiptWidth = "300px"; // LEBAR OPTIMAL UNTUK STRUK
+    String receiptWidth = "300px";
     String receiptPadding = "15px";
     int headerSize = fontSize + 2;
     int totalSize = fontSize + 4;

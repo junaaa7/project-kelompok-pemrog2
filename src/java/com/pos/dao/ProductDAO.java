@@ -15,10 +15,7 @@ import java.util.*;
  */
 
 public class ProductDAO {
-    
-    /**
-     * Get all products
-     */
+
     public List<Product> getAllProducts() {
         List<Product> products = new ArrayList<>();
         String sql = "SELECT p.*, c.name as category_name " +
@@ -42,10 +39,7 @@ public class ProductDAO {
         
         return products;
     }
-    
-    /**
-     * Get all categories
-     */
+ 
     public List<String> getAllCategories() {
         List<String> categories = new ArrayList<>();
         String sql = "SELECT name FROM categories ORDER BY name";
@@ -65,10 +59,7 @@ public class ProductDAO {
         
         return categories;
     }
-    
-    /**
-     * Get category ID by name
-     */
+
     public int getCategoryIdByName(String categoryName) {
         String sql = "SELECT id FROM categories WHERE name = ?";
         
@@ -90,10 +81,7 @@ public class ProductDAO {
         
         return -1;
     }
-    
-    /**
-     * Add new product
-     */
+
     public boolean addProduct(Product product) {
         String sql = "INSERT INTO products (code, name, description, price, stock, " +
                      "category_id, image_url, is_active, created_at) " +
@@ -128,10 +116,7 @@ public class ProductDAO {
             return false;
         }
     }
-    
-    /**
-     * Update existing product
-     */
+
     public boolean updateProduct(Product product) {
         String sql = "UPDATE products SET name = ?, description = ?, price = ?, stock = ?, " +
                      "category_id = ?, image_url = ?, is_active = ?, updated_at = NOW() " +
@@ -176,10 +161,7 @@ public class ProductDAO {
             return false;
         }
     }
-    
-    /**
-     * Toggle product status (active/inactive)
-     */
+
     public boolean toggleProductStatus(int productId) {
         String sql = "UPDATE products SET is_active = NOT is_active, updated_at = NOW() WHERE id = ?";
         
@@ -198,10 +180,7 @@ public class ProductDAO {
             return false;
         }
     }
-    
-    /**
-     * Delete product
-     */
+
     public boolean deleteProduct(int productId) {
         String sql = "DELETE FROM products WHERE id = ?";
         
@@ -220,10 +199,7 @@ public class ProductDAO {
             return false;
         }
     }
-    
-    /**
-     * Get product by ID
-     */
+
     public Product getProductById(int productId) {
         String sql = "SELECT p.*, c.name as category_name FROM products p " +
                      "LEFT JOIN categories c ON p.category_id = c.id " +
@@ -247,10 +223,7 @@ public class ProductDAO {
         
         return null;
     }
-    
-    /**
-     * Get product by code
-     */
+
     public Product getProductByCode(String code) {
         String sql = "SELECT p.*, c.name as category_name FROM products p " +
                      "LEFT JOIN categories c ON p.category_id = c.id " +
@@ -274,10 +247,7 @@ public class ProductDAO {
         
         return null;
     }
-    
-    /**
-     * Extract product from ResultSet
-     */
+
     private Product extractProductFromResultSet(ResultSet rs) throws SQLException {
         Product product = new Product();
         product.setId(rs.getInt("id"));

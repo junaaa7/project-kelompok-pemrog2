@@ -57,19 +57,16 @@ public class CategoryManagementServlet extends HttpServlet {
             } else if ("delete".equals(action)) {
                 deleteCategory(request, session);
             }
-            
-            // SELALU reload data setelah CRUD
+
             reloadCategories(session);
-            
-            // Set timestamp untuk auto-refresh
+
             session.setAttribute("lastUpdateTime", System.currentTimeMillis());
             
         } catch (Exception e) {
             e.printStackTrace();
             session.setAttribute("error", "Error: " + e.getMessage());
         }
-        
-        // Redirect dengan timestamp untuk force refresh browser
+
         response.sendRedirect("category-management.jsp?t=" + System.currentTimeMillis());
     }
     

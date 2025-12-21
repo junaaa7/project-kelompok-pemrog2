@@ -81,7 +81,7 @@ public class UserManagementServlet extends HttpServlet {
                     user.setRole(request.getParameter("role"));
                     user.setActive("on".equals(request.getParameter("isActive")));
                     
-                    // Update password jika diisi
+
                     String newPassword = request.getParameter("password");
                     boolean success;
                     
@@ -157,7 +157,7 @@ public class UserManagementServlet extends HttpServlet {
     
     protected void doGet(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
-        // Redirect ke POST atau tampilkan form
+
         doPost(request, response);
     }
 }

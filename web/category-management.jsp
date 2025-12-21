@@ -10,12 +10,11 @@
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.ArrayList" %>
 <%
-    // ========== CACHE CONTROL ==========
     response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     response.setHeader("Pragma", "no-cache");
     response.setDateHeader("Expires", 0);
     
-    // Generate timestamp untuk cache busting
+    
     String timestamp = request.getParameter("t");
     if (timestamp == null) {
         timestamp = String.valueOf(System.currentTimeMillis());
@@ -23,35 +22,32 @@
     
     System.out.println("=== JSP category-management.jsp LOADED (t=" + timestamp + ") ===");
     
-    // Cek authentication
+    
     User user = (User) session.getAttribute("user");
     if (user == null || !"admin".equals(user.getRole())) {
         response.sendRedirect("login.jsp");
         return;
     }
     
-    // ========== STRATEGI: AUTO-LOAD DATA PADA FIRST LOAD ==========
-    // Cek jika ini adalah page load pertama untuk session ini
+   
     String dataLoadedFlag = (String) session.getAttribute("categoryDataLoaded");
     
     if (dataLoadedFlag == null) {
-        // FIRST LOAD: Redirect ke Servlet untuk ambil data
+        
         System.out.println("JSP: First load detected, redirecting to Servlet");
         session.setAttribute("categoryDataLoaded", "true");
         response.sendRedirect("LoadCategoryServlet?t=" + timestamp);
         return; // STOP execution here
     }
     
-    // ========== AMBIL DATA YANG SUDAH DIMUAT ==========
     List<Category> categories = (List<Category>) session.getAttribute("categories");
     
-    // Jika masih null, buat list kosong
     if (categories == null) {
         System.out.println("JSP: No categories in session, using empty list");
         categories = new ArrayList<>();
     }
     
-    // ========== HITUNG STATISTIK ==========
+
     int totalCategories = categories.size();
     int totalProducts = 0;
     int categoriesWithProducts = 0;
@@ -63,11 +59,11 @@
         }
     }
     
-    // ========== AMBIL MESSAGES ==========
+
     String message = (String) session.getAttribute("message");
     String error = (String) session.getAttribute("error");
     
-    // Clear messages dari session setelah dibaca
+
     session.removeAttribute("message");
     session.removeAttribute("error");
     

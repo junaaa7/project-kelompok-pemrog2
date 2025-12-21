@@ -79,8 +79,7 @@ public class UserManagementDAO {
         
         return users;
     }
-    
-    // HAPUS SALAH SATU VERSION DARI getUserById - KEEP ONLY ONE
+
     
     public User getUserById(int userId) {
         String sql = "SELECT id, username, full_name, email, role, is_active FROM users WHERE id = ?";

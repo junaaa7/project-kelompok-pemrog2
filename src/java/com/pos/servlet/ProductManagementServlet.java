@@ -37,7 +37,7 @@ public class ProductManagementServlet extends HttpServlet {
         
         System.out.println("=== PRODUCT MANAGEMENT SERVLET STARTED ===");
         
-        HttpSession session = request.getSession(false); // Don't create new session
+        HttpSession session = request.getSession(false);
         
         // Check session
         if (session == null) {

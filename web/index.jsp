@@ -10,17 +10,15 @@
 <%@ page import="com.pos.model.User" %>
 <%@ page import="java.util.List" %>
 <%
-    // Check authentication
+
     Object userObj = session.getAttribute("user");
     boolean isLoggedIn = (userObj != null);
-    
-    // Redirect to login if not logged in
+
     if (!isLoggedIn) {
         response.sendRedirect("login.jsp");
         return;
     }
-    
-    // Only cashier can access transaction pages
+
     if (userObj instanceof User) {
         User user = (User) userObj;
         if ("admin".equals(user.getRole())) {
@@ -29,19 +27,17 @@
         }
     }
     
-    // Inisialisasi atau mendapatkan CartService dari session
+
     CartService cartService = (CartService) session.getAttribute("cartService");
     if (cartService == null) {
         cartService = new CartService();
         session.setAttribute("cartService", cartService);
         System.out.println("index.jsp: Created new CartService");
     }
-    
-    // Mendapatkan daftar produk
+
     List<Product> products = cartService.getAllProducts();
     System.out.println("index.jsp: Retrieved " + (products != null ? products.size() : "null") + " products");
-    
-    // Debug: Print semua produk ke console
+
     if (products != null) {
         for (Product p : products) {
             System.out.println("index.jsp DEBUG: " + p.getCode() + " - " + p.getName() + " - Rp" + p.getPrice());

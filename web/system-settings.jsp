@@ -9,7 +9,7 @@
 <%@ page import="com.pos.dao.SystemSettingsDAO" %>
 <%@ page import="com.pos.model.SystemSettings" %>
 <%
-    // Deklarasi variabel di luar try-catch
+
     User user = null;
     SystemSettings settings = null;
     String message = null;
@@ -21,8 +21,6 @@
             response.sendRedirect("login.jsp");
             return;
         }
-        
-        // Ambil data pengaturan dari database
         SystemSettingsDAO settingsDAO = new SystemSettingsDAO();
         settings = settingsDAO.getSettings();
         
@@ -30,18 +28,15 @@
             settings = new SystemSettings();
         }
         
-        // Ambil data dari session jika ada
         message = (String) session.getAttribute("message");
         messageType = (String) session.getAttribute("messageType");
         
     } catch (Exception e) {
-        // Tampilkan error di halaman
         out.println("<div class='alert alert-danger'>");
         out.println("<h4>Error Loading System Settings:</h4>");
         out.println("<pre>" + e.getMessage() + "</pre>");
         out.println("</div>");
         out.println("<a href='debug.jsp' class='btn btn-warning'>Debug</a>");
-        // Stop rendering lebih lanjut
         return;
     }
 %>

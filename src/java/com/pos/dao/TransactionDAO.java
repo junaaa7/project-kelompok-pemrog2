@@ -52,9 +52,6 @@ public class TransactionDAO {
         return transaction;
     }
     
-    /**
-     * Get transaction items by transaction code
-     */
     public List<Map<String, Object>> getTransactionItems(String transactionCode) {
         List<Map<String, Object>> items = new ArrayList<>();
         String sql = "SELECT ti.*, p.name as product_name, p.barcode " +
@@ -89,10 +86,7 @@ public class TransactionDAO {
         
         return items;
     }
-    
-    /**
-     * Get transaction by code and cashier id (for security)
-     */
+
     public Map<String, Object> getTransactionByCodeAndCashier(String transactionCode, int cashierId) {
         Map<String, Object> transaction = new HashMap<>();
         String sql = "SELECT * FROM transactions WHERE transaction_code = ? AND cashier_id = ?";

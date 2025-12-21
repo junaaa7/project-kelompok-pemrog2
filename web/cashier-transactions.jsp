@@ -546,8 +546,6 @@
         }
         
         function loadTransactionDetails(transactionCode) {
-            // In real app, fetch from server: fetch('GetTransactionDetails?code=' + transactionCode)
-            // For demo, show sample data
             const details = `
                 <h5>Transaksi: ${transactionCode}</h5>
                 <div class="row mb-3">
@@ -643,9 +641,6 @@
         function exportToExcel() {
             const date = document.querySelector('input[name="date"]').value;
             alert(`Export data transaksi tanggal ${date} ke Excel\n\nFitur export Excel akan segera tersedia.`);
-            
-            // In real app:
-            // window.location.href = 'ExportTransactionsServlet?date=' + date;
         }
         
         // Auto-refresh page every 5 minutes if on today's transactions

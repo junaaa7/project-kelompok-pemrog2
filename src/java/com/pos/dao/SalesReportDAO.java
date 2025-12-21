@@ -14,10 +14,7 @@ import java.util.*;
  */
 
 public class SalesReportDAO {
-    
-    /**
-     * Get daily sales summary
-     */
+
     public Map<String, Object> getDailySalesSummary(String date) {
         Map<String, Object> summary = new HashMap<>();
         String sql = "SELECT " +
@@ -52,9 +49,7 @@ public class SalesReportDAO {
         return summary;
     }
     
-    /**
-     * Get daily sales data (hourly breakdown)
-     */
+
     public List<Map<String, Object>> getDailySalesData(String date) {
         List<Map<String, Object>> salesData = new ArrayList<>();
         String sql = "SELECT " +
@@ -88,10 +83,7 @@ public class SalesReportDAO {
         
         return salesData;
     }
-    
-    /**
-     * Get sales by date range
-     */
+
     public List<Map<String, Object>> getSalesByDateRange(String startDate, String endDate) {
         List<Map<String, Object>> salesData = new ArrayList<>();
         String sql = "SELECT " +
@@ -127,10 +119,7 @@ public class SalesReportDAO {
         
         return salesData;
     }
-    
-    /**
-     * Get top selling products
-     */
+
     public List<Map<String, Object>> getTopSellingProducts(String startDate, String endDate, int limit) {
         List<Map<String, Object>> products = new ArrayList<>();
         String sql = "SELECT " +
@@ -173,10 +162,7 @@ public class SalesReportDAO {
         
         return products;
     }
-    
-    /**
-     * Get cashier performance
-     */
+
     public List<Map<String, Object>> getCashierPerformance(String startDate, String endDate) {
         List<Map<String, Object>> performance = new ArrayList<>();
         String sql = "SELECT " +
@@ -215,10 +201,7 @@ public class SalesReportDAO {
         
         return performance;
     }
-    
-    /**
-     * Get detailed transactions
-     */
+
     public List<Map<String, Object>> getDetailedTransactions(String startDate, String endDate, String cashierId) {
         List<Map<String, Object>> transactions = new ArrayList<>();
         
@@ -273,10 +256,7 @@ public class SalesReportDAO {
         
         return transactions;
     }
-    
-    /**
-     * Get sales by category
-     */
+
     public List<Map<String, Object>> getSalesByCategory(String startDate, String endDate) {
         List<Map<String, Object>> categories = new ArrayList<>();
         String sql = "SELECT " +
@@ -313,12 +293,7 @@ public class SalesReportDAO {
         
         return categories;
     }
-    
-    // === CASHIER-SPECIFIC METHODS ===
-    
-    /**
-     * Get transactions for specific cashier
-     */
+
     public List<Map<String, Object>> getCashierTransactions(int cashierId, String date) {
         List<Map<String, Object>> transactions = new ArrayList<>();
         String sql = "SELECT t.*, c.name as customer_name, u.username as cashier_username " +
@@ -359,10 +334,7 @@ public class SalesReportDAO {
         
         return transactions;
     }
-    
-    /**
-     * Get daily summary for specific cashier
-     */
+
     public Map<String, Object> getCashierDailySummary(int cashierId, String date) {
         Map<String, Object> summary = new HashMap<>();
         String sql = "SELECT " +
@@ -417,10 +389,7 @@ public class SalesReportDAO {
         
         return summary;
     }
-    
-    /**
-     * Get cashier's top selling products
-     */
+
     public List<Map<String, Object>> getCashierTopProducts(int cashierId, String startDate, String endDate) {
         List<Map<String, Object>> products = new ArrayList<>();
         String sql = "SELECT p.code, p.name, c.name as category, " +
@@ -462,10 +431,7 @@ public class SalesReportDAO {
         
         return products;
     }
-    
-    /**
-     * Get transaction details for a specific transaction
-     */
+
     public List<Map<String, Object>> getTransactionDetails(String transactionCode) {
         List<Map<String, Object>> details = new ArrayList<>();
         String sql = "SELECT td.*, p.code as product_code, p.name as product_name, " +

@@ -10,7 +10,7 @@ USE pos_web;
 CREATE TABLE users (
     id INT PRIMARY KEY AUTO_INCREMENT,
     username VARCHAR(50) UNIQUE NOT NULL,
-    password VARCHAR(100) NOT NULL,  -- PLAIN TEXT, bukan hash
+    password VARCHAR(100) NOT NULL,
     full_name VARCHAR(100) NOT NULL,
     email VARCHAR(100),
     role ENUM('admin', 'cashier') DEFAULT 'cashier',
