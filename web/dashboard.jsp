@@ -187,22 +187,6 @@
                 <% if ("cashier".equals(user.getRole())) { %>
                 <div class="access-restriction">
                     <div class="row align-items-center">
-                        <div class="col-md-10">
-                            <h4><i class="fas fa-info-circle"></i> Informasi Hak Akses Kasir</h4>
-                            <p class="mb-1">Anda login sebagai <strong>Kasir</strong> dengan akses terbatas:</p>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <p class="mb-1"><i class="fas fa-check-circle text-success"></i> Melakukan transaksi penjualan</p>
-                                    <p class="mb-1"><i class="fas fa-check-circle text-success"></i> Input barang ke keranjang</p>
-                                    <p class="mb-1"><i class="fas fa-check-circle text-success"></i> Menerima pembayaran</p>
-                                </div>
-                                <div class="col-md-6">
-                                    <p class="mb-1"><i class="fas fa-check-circle text-success"></i> Menghitung kembalian</p>
-                                    <p class="mb-1"><i class="fas fa-check-circle text-success"></i> Mencetak struk</p>
-                                    <p class="mb-1"><i class="fas fa-check-circle text-success"></i> Lihat riwayat transaksi sendiri</p>
-                                </div>
-                            </div>
-                        </div>
                         <div class="col-md-2 text-center">
                             <i class="fas fa-cash-register fa-3x"></i>
                         </div>

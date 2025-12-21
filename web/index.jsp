@@ -53,7 +53,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Kasir POS - Transaksi</title>
+    <title>Kasir POS - Transaksi</title>
     <link rel="stylesheet" type="text/css" href="css/style.css">
     <style>
         * {
@@ -294,7 +294,7 @@
                 <a href="dashboard.jsp">← Dashboard</a>
             </div>
             
-            <h1>🏪 Sistem Kasir POS - Transaksi</h1>
+            <h1>🏪 Kasir POS - Transaksi</h1>
             <div class="user-info">
                 <% if (userObj != null) { 
                     User user = (User) userObj;
@@ -306,14 +306,12 @@
         </header>
         
         <div class="menu-bar">
-            <a href="product-form.jsp" class="btn">➕ Input Barang Baru</a>
             <a href="cart.jsp" class="btn">🛒 Keranjang Belanja 
                 <% if (cartService.getCartSize() > 0) { %>
                     <span class="cart-count"><%= cartService.getCartSize() %></span>
                 <% } %>
             </a>
             <a href="dashboard.jsp" class="btn btn-secondary">📊 Dashboard</a>
-            <a href="receipt.jsp" class="btn">🧾 Cetak Struk</a>
         </div>
         
         <div class="cart-info">
